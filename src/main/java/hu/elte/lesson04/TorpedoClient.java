@@ -36,6 +36,7 @@ class TorpedoClient {
                     running = false;
                 }
                 out.println(cmd);
+                System.out.println(in.readLine());
             }
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -45,11 +46,8 @@ class TorpedoClient {
     }
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: <hostname> <port>");
-            return;
-        }
-        new TorpedoClient(args[0], Integer.parseInt(args[1])).run();
+
+        new TorpedoClient("localhost",2019).run();
     }
 
 }

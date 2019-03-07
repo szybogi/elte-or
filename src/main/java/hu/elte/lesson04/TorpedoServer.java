@@ -3,7 +3,6 @@ package hu.elte.lesson04;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Scanner;
 
 class TorpedoServer {
@@ -17,32 +16,37 @@ class TorpedoServer {
 
     private final int boardSize;
     private Type[][] map;
+    protected static boolean endOfGame = false;
+    protected static int intactShips = 0;
+
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.err.println("Usage: <ships_file> <server_port>");
-            return;
-        }
 
-        final int serverPort = Integer.parseInt(args[1]);
+        final int serverPort = 2019;
 
         TorpedoServer game;
-        try (Scanner ships = new Scanner(new File(args[0]))) {
+        try (Scanner ships = new Scanner(new File("src/main/resources/hu/elte/lesson04/ships.txt"))) {
             game = new TorpedoServer(10, ships);
         } catch (IOException e) {
             System.err.println("Error while reading ships!");
             e.printStackTrace();
             return;
         }
-
-        try (ServerSocket serverSocket = new ServerSocket(serverPort);
-             Socket clientSocket = serverSocket.accept();
-             PrintWriter out =
-                     new PrintWriter(clientSocket.getOutputStream(), true);
-             Scanner tips = new Scanner(
-                     new InputStreamReader(clientSocket.getInputStream()))
-        ) {
-            game.play(tips);
+        try (ServerSocket serverSocket = new ServerSocket(serverPort);) {
+            while (!endOfGame) {
+                Socket clientSocket = serverSocket.accept();
+                PrintWriter out =
+                        new PrintWriter(clientSocket.getOutputStream(), true);
+                Scanner tips = new Scanner(
+                        new InputStreamReader(clientSocket.getInputStream()));
+                game.play(tips, out);
+                clientSocket.close();
+                out.close();
+                tips.close();
+                if(intactShips == 0) {
+                    endOfGame = true;
+                }
+            }
         } catch (IOException e) {
             System.err.println("Error while reading tips!");
             e.printStackTrace();
@@ -65,6 +69,7 @@ class TorpedoServer {
             String shipType = lineScanner.next();
             int x = lineScanner.nextInt();
             int y = lineScanner.nextInt();
+            intactShips++;
             switch (shipType) {
                 case "X":
                     placeShip(x, y);
@@ -83,14 +88,16 @@ class TorpedoServer {
         }
     }
 
-    private void play(Scanner tips) {
+    private void play(Scanner tips, PrintWriter out) {
         while (tips.hasNextInt()) {
             int x = tips.nextInt();
             int y = tips.nextInt();
 
-            hit(x, y);
+            String message = hit(x, y);
+            out.println(message + ". Intact ships: " + intactShips);
 
             print(System.out);
+            System.out.println("\n");
         }
     }
 
@@ -135,17 +142,23 @@ class TorpedoServer {
         }
     }
 
-    private void hit(int x, int y) {
+    private String hit(int x, int y) {
+        String message = "Out of map";
         if (onMap(x, y)) {
             switch (get(x, y)) {
                 case SHIP_INTACT:
                     set(x, y, Type.SHIP_HIT);
+                    intactShips--;
+                    message = "Hit";
                     break;
                 case WATER:
                     set(x, y, Type.MISS);
+                    message = "Miss";
                     break;
             }
         }
+        return message;
+
     }
 
 }
