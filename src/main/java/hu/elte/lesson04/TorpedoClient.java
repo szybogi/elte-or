@@ -32,11 +32,18 @@ class TorpedoClient {
             boolean running = true;
             while (running) {
                 String cmd = stdIn.readLine();
+                int messageFromServer;
                 if (cmd.equals("exit")) {
                     running = false;
                 }
                 out.println(cmd);
                 System.out.println(in.readLine());
+                messageFromServer = Integer.parseInt(in.readLine());
+                System.out.println(messageFromServer);
+                if(messageFromServer == 0) {
+                    System.out.println(in.readLine());
+                    running = false;
+                }
             }
         } catch (UnknownHostException e) {
             e.printStackTrace();

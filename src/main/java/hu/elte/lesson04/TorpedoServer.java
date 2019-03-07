@@ -17,33 +17,46 @@ class TorpedoServer {
     private final int boardSize;
     private Type[][] map;
     protected static boolean endOfGame = false;
-    protected static int intactShips = 0;
+    private int intactShips = 0;
 
 
     public static void main(String[] args) {
 
         final int serverPort = 2019;
 
-        TorpedoServer game;
-        try (Scanner ships = new Scanner(new File("src/main/resources/hu/elte/lesson04/ships.txt"))) {
+        TorpedoServer game, game2;
+        try (Scanner ships = new Scanner(new File("src/main/resources/hu/elte/lesson04/ships.txt"));
+             Scanner ships2 = new Scanner(new File("src/main/resources/hu/elte/lesson04/ships2.txt"))
+        ) {
             game = new TorpedoServer(10, ships);
+            game2 = new TorpedoServer(10, ships2);
         } catch (IOException e) {
             System.err.println("Error while reading ships!");
             e.printStackTrace();
             return;
         }
-        try (ServerSocket serverSocket = new ServerSocket(serverPort);) {
+        try (ServerSocket serverSocket = new ServerSocket(serverPort);
+             Socket clientSocket = serverSocket.accept();
+             Socket clientSocket2 = serverSocket.accept();
+             PrintWriter outPlayer1 =
+                     new PrintWriter(clientSocket.getOutputStream(), true);
+             PrintWriter outPlayer2 =
+                     new PrintWriter(clientSocket2.getOutputStream(), true);
+             Scanner tipsPlayer1 = new Scanner(
+                     new InputStreamReader(clientSocket.getInputStream()));
+             Scanner tipsPlayer2 = new Scanner(
+                     new InputStreamReader(clientSocket2.getInputStream()));) {
             while (!endOfGame) {
-                Socket clientSocket = serverSocket.accept();
-                PrintWriter out =
-                        new PrintWriter(clientSocket.getOutputStream(), true);
-                Scanner tips = new Scanner(
-                        new InputStreamReader(clientSocket.getInputStream()));
-                game.play(tips, out);
-                clientSocket.close();
-                out.close();
-                tips.close();
-                if(intactShips == 0) {
+                game.play(tipsPlayer1, outPlayer1);
+                game2.play(tipsPlayer2, outPlayer2);
+                if (game.intactShips == 0 || game2.intactShips == 0) {
+                    if(game.intactShips == 0) {
+                        outPlayer1.println("You Win!");
+                        outPlayer2.println("You lose!");
+                    } else {
+                        outPlayer2.println("You Win!");
+                        outPlayer1.println("You lose!");
+                    }
                     endOfGame = true;
                 }
             }
@@ -69,32 +82,35 @@ class TorpedoServer {
             String shipType = lineScanner.next();
             int x = lineScanner.nextInt();
             int y = lineScanner.nextInt();
-            intactShips++;
             switch (shipType) {
                 case "X":
                     placeShip(x, y);
+                    intactShips += 1;
                     break;
                 case "I":
                     placeShip(x, y - 1);
                     placeShip(x, y);
                     placeShip(x, y + 1);
+                    intactShips += 3;
                     break;
                 case "-":
                     placeShip(x - 1, y);
                     placeShip(x, y);
                     placeShip(x + 1, y);
+                    intactShips += 3;
                     break;
             }
         }
     }
 
     private void play(Scanner tips, PrintWriter out) {
-        while (tips.hasNextInt()) {
+        if (tips.hasNextInt() && !endOfGame) {
             int x = tips.nextInt();
             int y = tips.nextInt();
 
             String message = hit(x, y);
-            out.println(message + ". Intact ships: " + intactShips);
+            out.println(message + ". IntactShips:");
+            out.println(intactShips);
 
             print(System.out);
             System.out.println("\n");
