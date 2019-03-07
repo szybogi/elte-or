@@ -46,19 +46,37 @@ class TorpedoServer {
                      new InputStreamReader(clientSocket.getInputStream()));
              Scanner tipsPlayer2 = new Scanner(
                      new InputStreamReader(clientSocket2.getInputStream()));) {
+            boolean firstStep = true;
             while (!endOfGame) {
+                outPlayer1.println(endOfGame);
                 game.play(tipsPlayer1, outPlayer1);
-                game2.play(tipsPlayer2, outPlayer2);
-                if (game.intactShips == 0 || game2.intactShips == 0) {
-                    if(game.intactShips == 0) {
-                        outPlayer1.println("You Win!");
-                        outPlayer2.println("You lose!");
+                if (endOfGame) {
+                    System.out.println("enndgame");
+                    outPlayer1.println("You Win!");
+                    if (firstStep) {
+                        System.out.println("FIRSTTES");
+                        outPlayer2.println(endOfGame);
+                        outPlayer2.flush();
+                    }
+                    outPlayer2.println("You lose!");
+                } else {
+                    if(!firstStep) {
+                        outPlayer2.println("Next step:");
+
                     } else {
+                        firstStep = false;
+                    }
+
+                    outPlayer2.println(endOfGame);
+                    game2.play(tipsPlayer2, outPlayer2);
+                    if (endOfGame) {
                         outPlayer2.println("You Win!");
                         outPlayer1.println("You lose!");
+                    } else {
+                        outPlayer1.println("Next step:");
                     }
-                    endOfGame = true;
                 }
+
             }
         } catch (IOException e) {
             System.err.println("Error while reading tips!");
@@ -109,11 +127,14 @@ class TorpedoServer {
             int y = tips.nextInt();
 
             String message = hit(x, y);
-            out.println(message + ". IntactShips:");
-            out.println(intactShips);
+            out.println(message + ". IntactShips: " + intactShips);
 
             print(System.out);
             System.out.println("\n");
+
+            if(intactShips == 0) {
+                endOfGame = true;
+            }
         }
     }
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 class TorpedoClient {
@@ -30,31 +31,38 @@ class TorpedoClient {
                                 new InputStreamReader(System.in))
         ) {
             boolean running = true;
+            boolean endOfGame;
             while (running) {
-                String cmd = stdIn.readLine();
-                int messageFromServer;
-                if (cmd.equals("exit")) {
-                    running = false;
-                }
-                out.println(cmd);
-                System.out.println(in.readLine());
-                messageFromServer = Integer.parseInt(in.readLine());
-                System.out.println(messageFromServer);
-                if(messageFromServer == 0) {
+                String status = in.readLine();
+                endOfGame = Boolean.getBoolean(status);
+                System.out.println(endOfGame);
+                if (endOfGame) {
                     System.out.println(in.readLine());
                     running = false;
+                } else {
+                    String cmd = stdIn.readLine();
+                    if (cmd.equals("exit")) {
+                        running = false;
+                    }
+                    out.println(cmd);
+                    System.out.println(in.readLine());
+                    String message = in.readLine();
+                    System.out.println(message);
+                    if(message.equals("You Win!") || message.equals("You lose!")) {
+                        running = false;
+                    }
+
                 }
+
             }
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     public static void main(String[] args) {
 
-        new TorpedoClient("localhost",2019).run();
+        new TorpedoClient("localhost", 2019).run();
     }
 
 }
