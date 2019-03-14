@@ -1,5 +1,7 @@
 package hu.elte.lesson05;
 
+import sun.awt.windows.ThemeReader;
+
 public class PingPong {
 
     static class Printer implements Runnable {
@@ -13,6 +15,13 @@ public class PingPong {
         @Override
         public void run() {
             while (true) {
+                try {
+                    synchronized (lock) {
+                        lock.wait();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 System.out.println(msg);
                 try {
                     Thread.sleep(1000);
@@ -21,13 +30,6 @@ public class PingPong {
                 }
                 synchronized (otherLock) {
                     otherLock.notify();
-                }
-                try {
-                    synchronized (lock) {
-                        lock.wait(1000);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         }
@@ -43,6 +45,10 @@ public class PingPong {
 
         new Thread(new Printer(lock1, lock2, "ping")).start();
         new Thread(new Printer(lock2, lock1, "pong")).start();
+
+        synchronized (lock1) {
+            lock1.notify();
+        }
     }
 
 }
