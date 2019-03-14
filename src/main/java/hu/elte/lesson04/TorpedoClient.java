@@ -35,7 +35,6 @@ class TorpedoClient {
             while (running) {
                 String status = in.readLine();
                 endOfGame = Boolean.getBoolean(status);
-                System.out.println(endOfGame);
                 if (endOfGame) {
                     System.out.println(in.readLine());
                     running = false;
