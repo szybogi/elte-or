@@ -8,13 +8,14 @@ public class Game implements AutoCloseable {
     int id;
     Player[] players;
     int currentPlayer;
+    Thread thread;
 
-    public Game(int id, Socket player1, Socket player2, boolean player1Starts) throws IOException {
+    public Game(int id, Player player1, Player player2, boolean player1Starts) throws IOException {
         this.id = id;
 
         log("Starting");
 
-        players = new Player[]{new Player(player1), new Player(player2)};
+        players = new Player[]{player1, player2};
         currentPlayer = player1Starts ? 0 : 1;
 
         log("Ships received");
@@ -131,5 +132,26 @@ public class Game implements AutoCloseable {
         for(int i =0;i<players.length;++i) {
             sendToPlayer(i, msg);
         }
+    }
+
+    public void start() {
+        thread = new Thread(() -> {
+            try{
+                while(isRunning()) {
+                    readHit();
+                    nextPlayer();
+                }
+                sendResult();
+                sendExitAll();
+            } finally {
+                try {
+                    thread.start();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+           });
+
+
     }
 }

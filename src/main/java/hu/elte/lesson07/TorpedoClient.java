@@ -214,7 +214,7 @@ class TorpedoClient {
             System.out.println("Usage: <hostname> <name> <ships_file>");
             return;
         }
-        new TorpedoClient(args[0], args[1], args[2]).run();
+        new TorpedoClient("157.181.176.8", "Bogi", "src.main.resources.hu.elte.lesson07.ships.txt").run();
     }
 
 }
